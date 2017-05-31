@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+	
+  	<bean id="messageDataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
+		<!-- 基本属性 url、user、password -->
+		<property name="url" value="${jdbc.url}/gld_gbq_message?useUnicode=true&amp;characterEncoding=UTF-8" />
+        <property name="username" value="${jdbc.userName}"/>
+        <property name="password" value="${jdbc.password}"/>
+		<!-- 配置初始化大小、最小、最大 -->
+		<property name="initialSize" value="${connectionPool.initialSize}" />
+		<property name="minIdle" value="${connectionPool.minIdle}" /> 
+		<property name="maxActive" value="${connectionPool.maxActive}" />
+		<!-- 配置获取连接等待超时的时间 -->
+		<property name="maxWait" value="${jdbc.maxWait}" />
+		<!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->
+		<property name="timeBetweenEvictionRunsMillis" value="${connectionPool.timeBetweenEvictionRunsMillis}" />
+		<!-- 配置一个连接在池中最小生存的时间，单位是毫秒 -->
+		<property name="minEvictableIdleTimeMillis" value="${connectionPool.minEvictableIdleTimeMillis}" />
+		<property name="validationQuery" value="select 1 from dual" />
+		<property name="testWhileIdle" value="true" />
+		<property name="testOnBorrow" value="false" />
+		<property name="testOnReturn" value="false" />
+		<!-- 打开PSCache，并且指定每个连接上PSCache的大小 -->
+		<property name="poolPreparedStatements" value="true" />
+		<property name="maxPoolPreparedStatementPerConnectionSize" value="${cache.maxSize}" />
+		<!-- 配置监控统计拦截的filters -->
+<!-- 		<property name="filters" value="stat" />  -->
+    </bean>
+  	<bean id="messageSessionFactory" 
+  	class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+	    <property name="dataSource" ref="messageDataSource" />
+	    <property name="hibernateProperties">
+		   <props>
+		         <prop key="hibernate.dialect">org.hibernate.dialect.MySQLDialect</prop>
+		         <prop key="hibernate.current_session_context_class">org.springframework.orm.hibernate4.SpringSessionContext</prop>    
+		  </props>
+		</property> 
+	    <property name="packagesToScan">
+            <list>
+                <value>com.glodon.gbq.message.po</value>
+            </list>
+        </property>
+	</bean>
+	<bean id="messageTransactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager"> 
+		<property name="sessionFactory" ref="messageSessionFactory"></property>
+	</bean>
+	<tx:annotation-driven transaction-manager="messageTransactionManager"></tx:annotation-driven>
+</beans>	
